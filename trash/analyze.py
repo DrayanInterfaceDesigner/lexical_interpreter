@@ -2,10 +2,10 @@
 
 import os
 from lexical import *
-from parser import Parser
+from parser import ParserLL1
 
 # Declaração de função pra análise
-def analisar_expressao(exp:str, parser:Parser):
+def analisar_expressao(exp:str, parser:ParserLL1):
     tokens = analisador_lexico_mef(exp)
     if isinstance(tokens, str):  # erro léxico
         return "inválida"
@@ -33,7 +33,7 @@ def get_all_filepaths(path: str) -> list:
     return file_paths
 
 
-def parse_all_files(uploaded:str, parser:Parser) -> None:
+def parse_all_files(uploaded:str, parser:ParserLL1) -> None:
   uploaded_keys:list = get_all_filepaths(uploaded)
 
   for fname in uploaded_keys:

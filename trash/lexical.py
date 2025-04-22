@@ -29,7 +29,7 @@ def analisador_lexico_mef(expressao):
             elif c == '\\':
                 estado = 'OPERADOR'
                 operador = c
-                i += 1
+                i += 2
             elif c == 't' and expressao[i:i+4] == 'true':
                 tokens.append(('CONSTANTE', 'true'))
                 i += 4

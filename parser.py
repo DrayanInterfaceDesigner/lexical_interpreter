@@ -1,77 +1,95 @@
 # Drayan Silva Magalhães, João Vitor Zambão, Lucas Gabriel Nunes Geremias, Lucca Lucchin de Campos Costa 
+from tree_node import TreeNode
 
-# Parser LL(1) baseado em tokens do analisador léxico
-from errors import *
-
-class Parser:
+class ParserLL1:
     def __init__(self):
+        self.reset()
+        self.parse_table = {
+            'S': {
+                'PROPOSICAO': ['PROPOSICAO'],
+                'CONSTANTE': ['CONSTANTE'],
+                'OPERATORUNARIO': ['U'],
+                'ABREPAREN': ['A']
+            },
+            'A': {
+                'ABREPAREN': ['ABREPAREN', 'S', 'R']
+            },
+            'R': {
+                'OPERATORBINARIO': ['OPERATORBINARIO', 'S', 'FECHAPAREN'],
+                'FECHAPAREN': ['FECHAPAREN']
+            },
+            'U': {
+                'OPERATORUNARIO': ['OPERATORUNARIO', 'S']
+            }
+        }
+
+    def reset(self) -> None:
         self.tokens = None
-        self.pos = 0
+        self.index = 0
+        self.root = None
 
-    def clear(self) -> None:
-        self.tokens = None
-        self.pos = 0
+    def parse(self, tokens):
+        self.reset()
+        self.tokens = tokens
+        self.root = TreeNode('S')
+        stack = [('S', self.root)]
 
-    def token_atual(self):
-        if self.pos < len(self.tokens):
-            return self.tokens[self.pos]
-        return None
+        while stack and self.index < len(self.tokens):
+            current_token = self.tokens[self.index]
+            current_type = current_token[0]
+            symbol, node = stack.pop()
 
-    def consumir(self, tipo_esperado=None):
-        token = self.token_atual()
-        if token is None:
-            if tipo_esperado is not None:
-                raise MissingTokenError(tipo_esperado)
+            if symbol in {'ABREPAREN', 'FECHAPAREN', 'OPERATORBINARIO',
+                         'OPERATORUNARIO', 'PROPOSICAO', 'CONSTANTE'}:
+                if symbol == current_type:
+                    node.children.append(TreeNode(symbol, current_token[1]))
+                    self.index += 1
+                else:
+                    raise SyntaxError(f"Esperado {symbol}, obteve {current_type}")
             else:
-                raise MissingTokenError("qualquer token")
-        if tipo_esperado is not None and token[0] != tipo_esperado:
-            raise UnexpectedTokenError(tipo_esperado, token[0])
-        self.pos += 1
-        return token
+                if symbol not in self.parse_table:
+                    raise SyntaxError(f"Símbolo inválido: {symbol}")
+                
+                productions = self.parse_table[symbol].get(current_type)
+                if not productions:
+                    expected = list(self.parse_table[symbol].keys())
+                    raise SyntaxError(f"Erro em '{current_token[1]}'. Esperava {expected}")
 
-    def parse(self, tokens:list):
-        try:
-            self.tokens = tokens
-            self.formula()
-            if self.token_atual() is not None:
-                curr_token = self.token_atual()[0]
-                self.clear()
-                raise UnexpectedTokenError("fim da entrada", curr_token)
-            self.clear()
-            return "valida"
-        except ParserError:
-            self.clear()
-            return "inválida"
+                new_node = TreeNode(symbol)
+                node.children.append(new_node)
 
-    def formula(self):
-        token = self.token_atual()
-        if token is None:
-            raise InvalidSyntaxError("Fórmula incompleta")
-        if token[0] == 'CONSTANTE':
-            self.consumir('CONSTANTE')
-        elif token[0] == 'PROPOSICAO':
-            self.consumir('PROPOSICAO')
-        elif token[0] == 'ABREPAREN':
-            self.formula_unaria_ou_binaria()
-        else:
-            raise UnexpectedTokenError("CONSTANTE, PROPOSICAO ou ABREPAREN", token[0])
-        return True
+                for elem in reversed(productions):
+                    if elem in self.parse_table or elem in {
+                        'ABREPAREN', 'FECHAPAREN', 'OPERATORBINARIO',
+                        'OPERATORUNARIO', 'PROPOSICAO', 'CONSTANTE'
+                    }:
+                        stack.append((elem, new_node))
+                    else:
+                        raise ValueError(f"Produção inválida: {elem}")
 
-    def formula_unaria_ou_binaria(self):
-        self.consumir('ABREPAREN')
-        token = self.token_atual()
-        if token is None:
-            raise MissingTokenError("OPERATORUNARIO ou OPERATORBINARIO")
-        if token[0] == 'OPERATORUNARIO':
-            self.consumir('OPERATORUNARIO')
-            self.formula()
-            self.consumir('FECHAPAREN')
-        elif token[0] == 'OPERATORBINARIO':
-            self.consumir('OPERATORBINARIO')
-            self.formula()
-            self.formula()
-            self.consumir('FECHAPAREN')
-        else:
-            print("OPERATORUNARIO ou OPERATORBINARIO")
-            raise UnexpectedTokenError("OPERATORUNARIO ou OPERATORBINARIO", token[0])
-        return True
+        if self.index != len(self.tokens) or stack:
+            remaining = len(self.tokens) - self.index
+            raise SyntaxError(f"Entrada incompleta. Tokens restantes: {remaining}, Símbolos pendentes: {len(stack)}")
+
+        return self.root
+
+
+#     parser = ParserLL1()
+    
+#     input_tokens = [
+#         ('ABREPAREN', '('), 
+#         ('ABREPAREN', '('),
+#         ('OPERATORUNARIO', '\\neg'),
+#         ('CONSTANTE', 'true'),
+#         ('FECHAPAREN', ')'),
+#         ('OPERATORBINARIO', '\\rightarrow'),
+#         ('CONSTANTE', 'false'),
+#         ('FECHAPAREN', ')')
+#     ]
+    
+#     try:
+#         tree = parser.parse(input_tokens)
+#         print("Árvore de análise:")
+#         TreeNode.print_tree(tree)
+#     except SyntaxError as e:
+#         print(f"Erro de sintaxe: {e}")

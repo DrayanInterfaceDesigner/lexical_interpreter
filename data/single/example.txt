@@ -1,11 +1,21 @@
-10
-true
-123abc
-( \\neg false )
-( \\wedge 1a 9z )
-( \\rightarrow ( \\neg true ) false )
-( \\neg ( \\vee x1 y2 ) )
-( \\wedge true )
-false true
-( \\neg
-123!
+20
+( ( \\neg true ) \\rightarrow false )
+\\neg ( true \\rightarrow false )
+true \\rightarrow ( false \\wedge \\neg true )
+( ( p \\vee q ) \\leftrightarrow ( \\neg r ) )
+\\neg \\neg true
+( ( a \\wedge b ) \\rightarrow c )
+\\neg ( ( true \\vee false ) )
+( \\neg ( true \\rightarrow false ) )
+( a \\rightarrow b ) \\rightarrow ( c \\vee d )
+\\neg ( a \\wedge ( b \\vee c ) )
+( true
+true \\rightarrow \\rightarrow false
+( \\neg true \\rightarrow false
+( a b ) \\rightarrow c
+\\neg ( true \\rightarrow ) false
+) \\neg true (
+( true \\rightarrow false ) )
+( \\neg true \\rightarrow ( false \\wedge true )
+( p \\vee \\vee q )
+\\neg ( ( true ) )
